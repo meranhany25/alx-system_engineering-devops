@@ -4,7 +4,7 @@
 # except the following TCP ports: 22 (SSH) 443 (HTTPS SSL) 80 (HTTP)
 
 sudo apt install ufw
-sudo apt-get -y install ufw
+sudo apt-get -yes install ufw
 sudo ufw default deny incoming
 sudo ufw allow 22/tcp
 sudo ufw allow 443/tcp
