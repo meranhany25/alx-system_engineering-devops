@@ -1,35 +1,28 @@
 #!/usr/bin/python3
-"""Script to paginate response"""
-
-import requests
+"""Module for task 2"""
 
 
-def recurse(subreddit, hot_list=[], page=1, limit=100):
-    """A recursive function that queries the Reddit API
-    returns a list containing the titles
-    of all hot articles for a given subreddit.
-    """
+def recurse(subreddit, hot_list=[], count=0, after=None):
+    """Queries the Reddit API and returns all hot posts
+    of the subreddit"""
+    import requests
 
-    if len(hot_list) >= limit:
-        return hot_list
-
-    url = f"https://www.reddit.com/r/{subreddit}/hot.json"
-    params = {"page": page}
-    headers = {
-        "User-Agent": "Mozilla"
-    }
-
-    res = requests.get(url, params=params, headers=headers)
-    if res.status_code == 404:
+    sub_info = requests.get("https://www.reddit.com/r/{}/hot.json"
+                            .format(subreddit),
+                            params={"count": count, "after": after},
+                            headers={"User-Agent": "My-User-Agent"},
+                            allow_redirects=False)
+    if sub_info.status_code >= 400:
         return None
-    data = res.json()
 
-    if "data" in data and "children" in data["data"]:
-        articles = data["data"]["children"]
-        for article in articles:
-            hot_list.append(article["data"]["title"])
+    hot_l = hot_list + [child.get("data").get("title")
+                        for child in sub_info.json()
+                        .get("data")
+                        .get("children")]
 
-    if "data" in data and "after" in data["data"]:
-        page += 1
-        return recurse(subreddit, hot_list, page)
-    return hot_list
+    info = sub_info.json()
+    if not info.get("data").get("after"):
+        return hot_l
+
+    return recurse(subreddit, hot_l, info.get("data").get("count"),
+                   info.get("data").get("after"))
